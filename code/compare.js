@@ -1,11 +1,27 @@
-let names = ['FallenAngel', 'FallenAngel2', 'Priest', 'AngryPriest'];
+let names = ['eStrats.titForTat','simpleton'];
 let COLSIZE = 30;
+
+const data = require("./cache.json");
 
 let color = false;
 
 let customNames = false;
 
 for(let i=0;i<process.argv.length;i++){
+  if(i==2){
+    names = [];
+    if(process.argv[i] == 'help'){
+      console.log(
+`Compares the performance of strategies who's path includes
+any of the provided names against all the other strategies
+
+usage: node compare.js -width=[width] -color [[name] []...]
+
+example: node compare.js -w=10 -c titForTat exampleStrats.simpleton
+`);
+      process.exit();
+    }
+  }
   if(
     process.argv[i].indexOf('-w=')==0 ||
     process.argv[i].indexOf('-width=')==0 ||
@@ -33,15 +49,6 @@ for(let i=0;i<process.argv.length;i++){
   }
 }
 
-const data = require('./results.json');
-
-for (let i in data) {
-  data[i].playerA.name = data[i].playerA.name.replace(/[a-zA-Z0-9]+\./, '');
-  data[i].playerB.name = data[i].playerB.name.replace(/[a-zA-Z0-9]+\./, '');
-
-  //console.log(data[i].playerA.name);
-  //console.log(data[i].playerB.name);
-}
 
 function standardDeviation(a) {
   let mean = 0;
@@ -55,28 +62,66 @@ function standardDeviation(a) {
   return Math.sqrt(1 / a.length * sum);
 }
 
-function compare(data, names) {
-  let relevant = [];
+function compare(data, names){
   let participants = [];
   let participantStuff = {};
-  for (let i in data) {
-    if (names.indexOf(data[i].playerA.name) >= 0) {
-      relevant.push(data[i]);
-      if (participants.indexOf(data[i].playerB.name) < 0) {
-        participants.push(data[i].playerB.name);
-        participantStuff[data[i].playerB.name] = {};
-      }
-      participantStuff[data[i].playerB.name][data[i].playerA.name]=data[i].playerA.avgScore;
+
+  let scores={};
+
+  for(let n1 in data){
+    if(!scores.hasOwnProperty(n1)){
+      scores[n1] = {
+        games:0,
+        stdev:0,
+        cum:0,
+      };
     }
-    if (names.indexOf(data[i].playerB.name) >= 0) {
-      relevant.push(data[i]);
-      if (participants.indexOf(data[i].playerA.name) < 0) {
-        participants.push(data[i].playerA.name);
-        participantStuff[data[i].playerA.name] = {};
+    let newest = data[n1][Object.keys(data[n1]).reduce((a, b) => a > b ? a : b)];
+    for(let n2 in newest){
+      if(!scores.hasOwnProperty(n2)){
+        scores[n2] = {
+          games:0,
+          stdev:0,
+          cum:0,
+        };
       }
-      participantStuff[data[i].playerA.name][data[i].playerB.name]=data[i].playerB.avgScore;
+      let round = newest[n2][Object.keys(newest[n2]).reduce((a, b) => a > b ? a : b)];
+
+      scores[n1].games++;
+      scores[n2].games++;
+      scores[n1].cum+=round[0];
+      scores[n2].cum+=round[1];
+      scores[n1].stdev+=round[2];
+      scores[n2].stdev+=round[3];
+
+      //round = round.map(a=>typeof a == 'number'?Math.round(a*100)/100:a)
+
+      let has = -1;
+      names.map(a=>{
+        if(n1.indexOf(a)>=0){
+          if(participants.indexOf(n2) < 0){
+            participants.push(n2);
+            participantStuff[n2] = {};
+          }
+          participantStuff[n2][n1] = round[0];
+        }
+        if(n2.indexOf(a)>=0){
+          if(participants.indexOf(n1) < 0){
+            participants.push(n1);
+            participantStuff[n1] = {};
+          }
+          participantStuff[n1][n2] = round[1];
+        }
+      })
     }
   }
+
+  if(Object.keys(participantStuff).length <= 0){
+    console.log("No results");
+    process.exit();
+  }
+
+  names = Object.keys(participantStuff[Object.keys(participantStuff)[0]]);
 
   for(let i in names){
     participants.splice(participants.indexOf(names[i]),1);
@@ -96,7 +141,7 @@ function compare(data, names) {
   let t2 = "---------".padStart(COLSIZE,'-');
 
   for(let n in names){
-    t1 += "|"+names[n].padEnd(COLSIZE);
+    t1 += "|"+names[n].padEnd(COLSIZE).slice(0,COLSIZE);
     t2 += "+"+"".padEnd(COLSIZE,"-");
   }
 
@@ -136,7 +181,7 @@ function compare(data, names) {
         }
       }
     }
-    console.log(`${(''+participants[i]).padEnd(COLSIZE)}${t}`);
+    console.log(`${(''+participants[i]).padEnd(COLSIZE).slice(0,COLSIZE)}${t}`);
   }
 }
 
