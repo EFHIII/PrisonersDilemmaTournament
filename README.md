@@ -8,7 +8,7 @@ You can run the tournament using
 
 This will create a cache file `cache.json` which can be used with the other tools for analysis. The cache file also makes subsequent runs of `run.py` significantly faster. You can have `run.py` ignore the cache file using the flag `--delete-cache`.
 
-### print.js
+## print.js
 Prints out matches that involve any files who's path includes any of the provided names
 
 usage:
@@ -17,7 +17,7 @@ usage:
 example:
 > node print.js titForTat exampleStrats.simpleton
 
-### compare.js
+## compare.js
 Compares the performance of strategies who's path includes any of the provided names against all the other strategies
 
 usage:
