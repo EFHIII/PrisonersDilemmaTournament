@@ -140,25 +140,25 @@ def runRounds(pair):
         scoresA, scoresB = tallyRoundScores(roundHistory)
         if i == 0:
             # log the first round's history
-            firstRoundHistory = roundHistory
+            firstRoundHistory = roundHistory.tolist()
             # check if the game was one of a few basic cases for early escape
             if scoresA == 3 and scoresB == 3:
                 return [
                     [pair[0][0],pair[1][0],pair[0][1],pair[1][1]],
-                    [3, 3, 0, 0, firstRoundHistory.tolist()],
-                    [3, 3, 0, 0, firstRoundHistory.tolist().reverse()],
+                    [3, 3, 0, 0, firstRoundHistory],
+                    [3, 3, 0, 0, firstRoundHistory],
                 ]
             if scoresA == 0:
                 return [
                     [pair[0][0],pair[1][0],pair[0][1],pair[1][1]],
-                    [0, 5, 0, 0, firstRoundHistory.tolist()],
-                    [5, 0, 0, 0, firstRoundHistory.tolist().reverse()],
+                    [0, 5, 0, 0, firstRoundHistory],
+                    [5, 0, 0, 0, firstRoundHistory],
                 ]
             if scoresB == 0:
                 return [
                     [pair[0][0],pair[1][0],pair[0][1],pair[1][1]],
-                    [5, 0, 0, 0, firstRoundHistory.tolist()],
-                    [0, 5, 0, 0, firstRoundHistory.tolist().reverse()],
+                    [5, 0, 0, 0, firstRoundHistory],
+                    [0, 5, 0, 0, firstRoundHistory],
                 ]
 
         allScoresA.append(scoresA)
@@ -174,8 +174,8 @@ def runRounds(pair):
 
                 return [
                     [pair[0][0],pair[1][0],pair[0][1],pair[1][1]],
-                    [avgScoreA, avgScoreB, stdevA, stdevB, firstRoundHistory.tolist()],
-                    [avgScoreB, avgScoreA, stdevB, stdevA, firstRoundHistory.tolist().reverse()],
+                    [avgScoreA, avgScoreB, stdevA, stdevB, firstRoundHistory],
+                    [avgScoreB, avgScoreA, stdevB, stdevA, firstRoundHistory],
                 ]
 
     avgScoreA = statistics.mean(allScoresA)
@@ -185,8 +185,8 @@ def runRounds(pair):
 
     return [
         [pair[0][0],pair[1][0],pair[0][1],pair[1][1]],
-        [avgScoreA, avgScoreB, stdevA, stdevB, firstRoundHistory.tolist()],
-        [avgScoreB, avgScoreA, stdevB, stdevA, firstRoundHistory.tolist().reverse()],
+        [avgScoreA, avgScoreB, stdevA, stdevB, firstRoundHistory],
+        [avgScoreB, avgScoreA, stdevB, stdevA, firstRoundHistory],
     ]
 
 def loadCache():
@@ -271,6 +271,7 @@ def runFullPairingTournament(inFolders, outFile):
             if v[0][0] > v[0][1]:
                 v[0]=[v[0][1],v[0][0],v[0][3],v[0][2]]
                 v[1]=v[2]
+                v[1][4].reverse()
 
             # add to cache
             if v[0][0] not in cache:

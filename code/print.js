@@ -1,76 +1,63 @@
 const fs = require("fs");
 
-let view = ['jed'];
+let view = ['.alwaysCooperate'];
+
+
+for(let i=2;i<process.argv.length;i++){
+  if(i==2){
+    view = [];
+  }
+  view.push(process.argv[i]);
+}
+
+console.log(process.argv);
 
 const data = require("./cache.json");
 
 print(data);
 
 function print(data){
-  let ans = "";
+  let ans = [];
 
   for(let n1 in data){
     let newest = data[n1][Object.keys(data[n1]).reduce((a, b) => a > b ? a : b)];
     for(let n2 in newest){
       let round = newest[n2][Object.keys(newest[n2]).reduce((a, b) => a > b ? a : b)];
 
-      if(view.indexOf(n1) >= 0 || view.indexOf(n2) >= 0){
+      round = round.map(a=>typeof a == 'number'?Math.round(a*100)/100:a)
 
-      }
-    }
-  }
+      let has = -1;
+      view.map(a=>{
+        if(n1.indexOf(a)>=0){has=1}
+        if(n2.indexOf(a)>=0){has=0}
+      })
 
-}
-
-function run(txt){
-  let scores = false;
-  let ans = txt.split('\n');
-  for(let i=0;i<ans.length;i++){
-    if(ans[i].indexOf('SCORES')>0){scores=true;}
-    ans[i]=ans[i].replace(/(?!VS\.|\S\.)[a-zA-Z0-9]+\./g,'');
-    if(ans[i][0] === 'C' || ans[i][0] === 'D'){
-      let t = ans[i].split(' ');
-      let tt='';
-
-      for(let j=0;j<t.length;j+=2){
-        switch(t[j]+t[j+1]){
-          case 'CC':tt+='█';break;
-          case 'CD':tt+='▌';break;
-          case 'DC':tt+='▐';break;
-          case 'DD':tt+=' ';break;
+      if(has >= 0){
+        let txt=[has ?
+          `${n1} (${round[0]} +/- ${round[2]}) VS ${n2} (${round[1]} +/- ${round[3]})\n` :
+          `${n2} (${round[1]} +/- ${round[3]}) VS ${n1} (${round[0]} +/- ${round[2]})\n`
+        ];
+        let t = round[4];
+        for(let k=0;k<2;k++){
+          let tt='';
+          for(let j=0;j<t[k].length;j+=2){
+            switch(''+t[k][j]+t[k][j+1]){
+              case '11':tt+='█';break;
+              case '10':tt+='▌';break;
+              case '01':tt+='▐';break;
+              case '00':tt+=' ';break;
+            }
+          }
+          txt.push('\x1b[41m\x1b[32m'+tt+'\x1b[0m\n');
         }
+        ans.push([
+          round[has ? 0 : 1],
+          txt[0] + (has ? txt[1]+txt[2]:txt[2]+txt[1])
+        ]);
       }
-
-      ans[i] = '\x1b[41m\x1b[92m'+tt+'\x1b[0m\n';
-    }
-    else if(ans[i].indexOf('VS.') > 0){
-      if(view.slice().map(a=>ans[i].indexOf(a)>=0).indexOf(true)<0){
-        ans.splice(i,6);
-        i--;
-      }
-      else{
-        ans[i]+='\n';
-        ans[i]=ans[i].replace('P1',parseFloat(ans[i+3].split(' ')[4]));
-        ans[i]=ans[i].replace('P2',parseFloat(ans[i+4].split(' ')[4]));
-      }
-    }
-    else if(ans[i].indexOf('Final') >= 0){
-      ans[i]='';
-    }
-    else{
-      if(ans[i].length < 2){}
-      else{
-        ans[i]+='\n';
-      }
-    }
-
-    if(scores && ans[i].indexOf(':')>0){
-      q=ans[i].slice(0,4);
-      ans[i]=ans[i].slice(4).replace(/ /g,'');
-      ans[i]=q+ans[i].replace(':',''.padEnd(26-ans[i].indexOf(':'),' '));
-      ans[i]=ans[i].replace('average',' average');
-      ans[i]=ans[i].replace('(',' (');
     }
   }
-  console.log(ans.join(''));
+
+  console.log(ans.sort((a,b)=>b[0]-a[0]).map(a=>a[1]).join(''));
+  console.log("Winners");
 }
