@@ -25,3 +25,12 @@ usage:
 
 example:
 > node compare.js -w=10 -c titForTat exampleStrats.simpleton
+
+## meta.js
+Prints out matches that involve any files who's path includes any of the provided names
+
+usage:
+> node meta.js [[name] []...]
+
+example:
+> node meta.js titForTat exampleStrats.simpleton
