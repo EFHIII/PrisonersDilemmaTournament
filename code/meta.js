@@ -98,7 +98,7 @@ function print(data, meta){
 
   winners.sort((a,b)=>b[1].cum/b[1].games-a[1].cum/a[1].games);
 
-  console.log("  # | avg  | weight | name");
-  console.log("----+------+--------+------");
-  console.log(winners.map((a,b)=>`${(b+1+'').padStart(3)} | ${(a[1].cum/a[1].games+0.005+'').slice(0,4).padEnd(4,' ')} | ${(getWeight(a[0], meta)+'').padStart(6)} | ${a[0]}\n`).join(''));
+  console.log("  # |  avg  | stdev | weight | name");
+  console.log("----+-------+-------+--------+------");
+  console.log(winners.map((a,b)=>`${(b+1+'').padStart(3)} | ${(a[1].cum/a[1].games+0.0005+'').slice(0,5).padEnd(5,' ')} | ${(a[1].stdev/a[1].games+0.0005+'').slice(0,5).padEnd(5,' ')} | ${(getWeight(a[0], meta)+'').padStart(6)} | ${a[0]}\n`).join(''));
 }

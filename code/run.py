@@ -219,7 +219,7 @@ def runFullPairingTournament(inFolders, outFile):
             if file.endswith(".py"):
                 STRATEGY_LIST.append([
                     f"{inFolder}.{file[:-3]}",
-                    pathlib.Path(f'{inFolder}/{file[:-3]}.py').stat().st_mtime_ns
+                    f"{pathlib.Path(f'{inFolder}/{file[:-3]}.py').stat().st_mtime_ns}"
                 ])
 
     if len(STRATEGY_LIST) < 2:
@@ -241,15 +241,17 @@ def runFullPairingTournament(inFolders, outFile):
     while i > 0:
         i -= 1
         if combinations[i][0][0] in cache:
-            if combinations[i][1][0] in cache[combinations[i][0][0]]:
-                if f"{combinations[i][0][1]},{combinations[i][1][1]}" in cache[combinations[i][0][1]][combinations[i][1][1]]:
-                    combinations.pop(i)
-                continue
+            if combinations[i][0][1] in cache[combinations[i][0][0]]:
+                if combinations[i][1][0] in cache[combinations[i][0][0]][combinations[i][0][1]]:
+                    if combinations[i][1][1] in cache[combinations[i][0][0]][combinations[i][0][1]][combinations[i][1][0]]:
+                        combinations.pop(i)
+                    continue
 
         if combinations[i][1][0] in cache:
-            if combinations[i][0][0] in cache[combinations[i][1][0]]:
-                if f"{combinations[i][1][1]},{combinations[i][0][1]}" in cache[combinations[i][1][1]][combinations[i][0][1]]:
-                    combinations.pop(i)
+            if combinations[i][1][1] in cache[combinations[i][1][0]]:
+                if combinations[i][0][0] in cache[combinations[i][1][0]][combinations[i][1][1]]:
+                    if combinations[i][0][1] in cache[combinations[i][1][0]][combinations[i][1][1]][combinations[i][0][0]]:
+                        combinations.pop(i)
 
     skippedCombinations = numCombinations-len(combinations)
 
