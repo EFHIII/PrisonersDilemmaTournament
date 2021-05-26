@@ -1,5 +1,8 @@
 let names = [];
 
+if(process.argv.length < 3){
+  process.argv.push('help')
+}
 
 for(let i=2;i<process.argv.length;i++){
   if(i==2){
