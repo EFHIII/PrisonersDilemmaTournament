@@ -1,11 +1,22 @@
 const fs = require("fs");
 
-let view = ['.alwaysCooperate'];
+let view = ['eStrats.alwaysCooperate'];
 
 
 for(let i=2;i<process.argv.length;i++){
   if(i==2){
     view = [];
+    if(process.argv[i] == 'help'){
+      console.log(
+`Prints out matches that involve any files
+who's path includes any of the provided names
+
+usage: node print.js [[name] []...]
+
+example: node print.js titForTat exampleStrats.simpleton
+`);
+      process.exit();
+    }
   }
   view.push(process.argv[i]);
 }
