@@ -15,7 +15,7 @@ for(let i=0;i<process.argv.length;i++){
 `Compares the performance of strategies who's path includes
 any of the provided names against all the other strategies
 
-usage: node compare.js -width=[width] -color [[name] []...]
+usage: node compare.js -width=[width] -color [[name] ...]
 
 example: node compare.js -w=10 -c titForTat exampleStrats.simpleton
 `);

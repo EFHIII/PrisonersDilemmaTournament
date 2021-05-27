@@ -12,7 +12,7 @@ This will create a cache file `cache.json` which can be used with the other tool
 Prints out matches that involve any files who's path includes any of the provided names
 
 usage:
-> node print.js [[name] []...]
+> node print.js [[name] ...]
 
 example:
 > node print.js titForTat exampleStrats.simpleton
@@ -21,7 +21,7 @@ example:
 Compares the performance of strategies who's path includes any of the provided names against all the other strategies
 
 usage:
-> node compare.js -width=[width] -color [[name] []...]
+> node compare.js -width=[width] -color [[name] ...]
 
 example:
 > node compare.js -w=10 -c titForTat exampleStrats.simpleton
@@ -30,7 +30,7 @@ example:
 Prints out standings from the meta settings defined in meta.ini
 
 usage:
-> node meta.js -top=[top] [[name]=[weight] []=[]...]
+> node meta.js -top=[top] [[name]=[weight] ...]
 
 example:
 > node meta.js titForTat=100 exampleStrats.simpleton=50
@@ -39,7 +39,7 @@ example:
 Prints out an animated standings interpolating between the provided meta range
 
 usage:
-> node metarange.js -top=[top] -steps=[steps] [[name]=[weightStart]-[weightEnd] []=[]-[]...]
+> node metarange.js -top=[top] -steps=[steps] [-color=[name] ...] [[name]=[weightStart]-[weightEnd] ...]
 
 example:
 > node metarange.js titForTat=0-100

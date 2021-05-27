@@ -9,7 +9,7 @@ for(let i=2;i<process.argv.length;i++){
       console.log(
 `Prints out standings from the meta settings defined in meta.ini
 
-usage: node meta.js -top=[top] [[name]=[weight] []=[]...]
+usage: node meta.js -top=[top] [[name]=[weight] ...]
 
 example: node meta.js titForTat=100 exampleStrats.simpleton=50
 `);

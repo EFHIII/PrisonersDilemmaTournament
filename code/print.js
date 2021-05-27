@@ -12,7 +12,7 @@ for(let i=2;i<process.argv.length;i++){
 `Prints out matches that involve any files
 who's path includes any of the provided names
 
-usage: node print.js [[name] []...]
+usage: node print.js [[name] ...]
 
 example: node print.js titForTat exampleStrats.simpleton
 `);

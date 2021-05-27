@@ -1,6 +1,8 @@
 let weights = [];
 let STEPS = 200;
 let TOP = 10;
+let COLOR = [];
+let COLORTEXT = '\x1b[42m';
 
 for(let i=2;i<process.argv.length;i++){
   if(i==2){
@@ -9,7 +11,7 @@ for(let i=2;i<process.argv.length;i++){
       console.log(
 `Prints out an animated standings interpolating between the provided meta range
 
-usage: node metarange.js -top=[top] -steps=[steps] [[name]=[weightStart]-[weightEnd] []=[]-[]...]
+usage: node metarange.js -top=[top] -steps=[steps] [-color=[name] ...] [[name]=[weightStart]-[weightEnd] ...]
 
 example: node metarange.js titForTat=0-100
 `);
@@ -30,6 +32,14 @@ example: node metarange.js titForTat=0-100
     process.argv[i].indexOf('--top=')==0
   ){
     TOP = parseInt(process.argv[i].replace('--top=','').replace('-top=','').replace('-t=',''));
+    continue;
+  }
+  if(
+    process.argv[i].indexOf('-c=')==0 ||
+    process.argv[i].indexOf('-color=')==0 ||
+    process.argv[i].indexOf('--color=')==0
+  ){
+    COLOR.push(process.argv[i].replace('--color=','').replace('-color=','').replace('-c=',''));
     continue;
   }
   weights.push(process.argv[i]);
@@ -165,11 +175,17 @@ function print(data, meta){
   console.clear();
   console.log("  # |  avg  | stdev | weight | name\n"+
   "----+-------+-------+--------+------\n"+
-  winners.filter(a=>getWeight(a[0], meta)>=0).slice(0,TOP).map((a,b)=>`${(b+1+'').padStart(3)} | `+
-  `${(a[1].cum/a[1].games+0.0005+'').slice(0,5).padEnd(5,' ')} | `+
-  `${(a[1].stdev/a[1].games+0.0005+'').slice(0,5).padEnd(5,' ')} | `+
-  `${getWeight(a[0], meta)>=1000?(''+Math.round(getWeight(a[0], meta))).padStart(6):getWeight(a[0], meta)%1==0?(''+getWeight(a[0], meta)).padStart(6):(''+getWeight(a[0], meta)).slice(0,6).padEnd(6,0)} | `+
-  `${a[0]}\n`).join(''));
+  winners.filter(a=>getWeight(a[0], meta)>=0).slice(0,TOP).map((a,b)=>{
+    let weight = getWeight(a[0], meta);
+    let ctext = COLOR.filter(c=>a[0].indexOf(c)>=0?1:0).length > 0;
+    return `${ctext?COLORTEXT:''}`+
+    `${(b+1+'').padStart(3)} | `+
+    `${(a[1].cum/a[1].games+0.0005+'').slice(0,5).padEnd(5,' ')} | `+
+    `${(a[1].stdev/a[1].games+0.0005+'').slice(0,5).padEnd(5,' ')} | `+
+    `${weight>=1000?(''+Math.round(weight)).padStart(6):getWeight(a[0], meta)%1==0?(''+weight).padStart(6):(''+weight).slice(0,6).padEnd(6,0)} | `+
+    `${a[0]}`+
+    `${ctext?'\x1b[0m':''}\n`;
+  }).join(''));
 }
 
 async function printRange(data,meta,metaranges){
