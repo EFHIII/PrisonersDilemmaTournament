@@ -27,10 +27,19 @@ example:
 > node compare.js -w=10 -c titForTat exampleStrats.simpleton
 
 ## meta.js
-Prints out matches that involve any files who's path includes any of the provided names
+Prints out standings from the meta settings defined in meta.ini
 
 usage:
-> node meta.js [[name] []...]
+> node meta.js -top=[top] [[name]=[weight] []=[]...]
 
 example:
-> node meta.js titForTat exampleStrats.simpleton
+> node meta.js titForTat=100 exampleStrats.simpleton=50
+
+## metarange.js
+Prints out an animated standings interpolating between the provided meta range
+
+usage:
+> node metarange.js -top=[top] -steps=[steps] [[name]=[weightStart]-[weightEnd] []=[]-[]...]
+
+example:
+> node metarange.js titForTat=0-100
