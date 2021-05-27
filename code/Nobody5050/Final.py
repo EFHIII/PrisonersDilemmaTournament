@@ -4,8 +4,8 @@ import random
 import numpy as np
 
 def strategy(history, memory):
-
-	# A finite state machine detective.
+	
+	# A finite state machine detective. 
 	# It tries to figure out what the oponent is thinking,
 	# and if it cant, it becomes a tit-for-tat
 	#
@@ -19,8 +19,8 @@ def strategy(history, memory):
 	# [X] Submit
 	#
 	# Also, cary if you're reading this a few things:
-	# 1. I'd love to see another version if this contest
-	# with a chance of misscomunication,
+	# 1. I'd love to see another version if this contest 
+	# with a chance of misscomunication, 
 	# as well as some other highly requested features
 	#
 	# 2. Although I doubt i'll win, if I do then I want to explain
@@ -34,8 +34,8 @@ def strategy(history, memory):
 	# together is truly phenominal. I'm not exagerating when I say
 	# that this week has truly changed my life.
 	#
-	# Thank you.
-
+	# Thank you. 
+	
 	num_rounds = history.shape[1] # number of rounds completed
 	max_defection_threshold = Decimal(1) / Decimal(2)  # do not forgive high defections
 	small_defection_window = 20
@@ -47,7 +47,7 @@ def strategy(history, memory):
 	defections = opponents_recent_moves - our_recent_moves # subtract the moves from eachother to get a total number of defections
 	opponents_recent_defections = np.count_nonzero(defections == 1) # count the number of defections
 	testing_schedule = [1, 0, 0, 1, 1] # list of moves to perform while testing
-
+	
 	if memory == None:
 		if num_rounds >= len(testing_schedule):
 			# Time to choose something.
@@ -64,7 +64,7 @@ def strategy(history, memory):
 				# they always defect
 				choice = "defect"
 				memory = "alwaysDefect"
-			elif opponent_moves[2] == 1 and opponent_moves[3] == 0:
+			elif opponent_moves[2] == 1 and opponent_moves[3] == 0:  
 				# ftft detected
 				choice = "cooperate"
 				memory = "alternate"
@@ -86,7 +86,7 @@ def strategy(history, memory):
 		elif memory == "tft":
 			#do tft
 			choice = "cooperate"
-			if history.shape[1] >= 1 and history[1,-1] == 0:
+			if history.shape[1] >= 1 and history[1,-1] == 0: 
 				# Choose to defect if and only if the opponent just defected.
 				choice = "defect"
 		elif memory == "alternate":
@@ -106,6 +106,5 @@ def strategy(history, memory):
 			choice = "cooperate"
 		else:
 			choice = "cooperate"
-
-	#print(memory)		
+		
 	return choice, memory
