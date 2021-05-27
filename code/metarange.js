@@ -173,7 +173,7 @@ function print(data, meta){
 }
 
 async function printRange(data,meta,metaranges){
-  for(let i=0;i<STEPS;i++){
+  for(let i=0;i<=STEPS;i++){
     let tempMeta = meta.slice().concat(metaranges.map(a=>[a[0],a[1]+(a[2]-a[1])*i/STEPS]));
     print(data,tempMeta);
     console.log('\n'+metaranges.map(a=>`${a[0]} = ${a[1]+(a[2]-a[1])*i/STEPS}`).join('\n'));
