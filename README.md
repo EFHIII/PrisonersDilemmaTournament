@@ -43,3 +43,12 @@ usage:
 
 example:
 > node metarange.js titForTat=0-100
+
+## metagrid.js
+Prints out a grid of the position of the focused strategy for the provided meta ranges
+
+usage:
+> node metagrid.js -focus=[name] -color -steps=[steps] [[name]=[weightStart]-[weightEnd] ...]
+
+example:
+> node metagrid.js -f=exampleStrats.titForTat -c random=0-10 titForTat=0-100
