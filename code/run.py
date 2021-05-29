@@ -3,12 +3,6 @@ import os
 STRATEGY_FOLDERS = [p for p in os.listdir() if os.path.isdir(p)]
 CACHE_FILE = "cache.json"
 
-# Minimum rounds to run before an early escape
-MIN_ROUNDS = 11
-
-# Minimum Standard Deviation to keep calculating after MIN_ROUNDS
-MIN_SD = 0.002
-
 import multiprocessing
 import itertools
 import importlib
@@ -30,6 +24,15 @@ parser.add_argument(
     type=int,
     default=100,
     help="Number of runs to average out",
+)
+
+parser.add_argument(
+    "-d",
+    "--det-turns",
+    dest="deterministic_turns",
+    type=int,
+    default=500,
+    help="Number of turns in a deterministic run",
 )
 
 cacheparser = parser.add_argument_group("Cache")
@@ -63,6 +66,11 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+
+DETERMINISTIC_TURNS = args.deterministic_turns
+
+if DETERMINISTIC_TURNS < 200:
+    raise Exception("--det-turns must be at least 200")
 
 NUM_RUNS = args.num_runs
 
@@ -107,6 +115,66 @@ def runRound(moduleA, moduleB):
 
     return history
 
+turnChances = []
+
+def turnChance(x,summing=False):
+    if x == 0:
+        return 1/40
+    if summing:
+        S = turnChance(x-1,True)
+        return (1-S)/40+S
+    return (1-turnChance(x-1,True))/40
+
+for i in range(DETERMINISTIC_TURNS-199):
+    turnChances.append(turnChance(i))
+
+# this is so that deterministic algorithms still get 3 points for always Coop,
+# instead of 2.999
+chancesSum = sum(turnChances)
+turnChances = [i/chancesSum for i in turnChances]
+
+def runDeterministic(moduleA, moduleB):
+    memoryA = None
+    memoryB = None
+    memoryA2 = None
+    memoryB2 = None
+
+    history = np.zeros((2,DETERMINISTIC_TURNS),dtype=int)
+    historyFlipped = np.zeros((2,DETERMINISTIC_TURNS),dtype=int)
+
+    for turn in range(DETERMINISTIC_TURNS):
+        playerAmove, memoryA = moduleA.strategy(history[:,:turn].copy(),memoryA)
+        playerBmove, memoryB = moduleB.strategy(historyFlipped[:,:turn].copy(),memoryB)
+        history[0, turn] = strategyMove(playerAmove)
+        history[1, turn] = strategyMove(playerBmove)
+
+        playerAmove2, memoryA2 = moduleA.strategy(history[:,:turn].copy(),memoryA2)
+        playerBmove2, memoryB2 = moduleB.strategy(historyFlipped[:,:turn].copy(),memoryB2)
+
+        if strategyMove(playerAmove2) != strategyMove(playerAmove):
+            return False
+        if strategyMove(playerBmove2) != strategyMove(playerBmove):
+            return False
+
+        historyFlipped[0,turn] = history[1,turn]
+        historyFlipped[1,turn] = history[0,turn]
+
+    totals = [0,0]
+    scores = [0,0]
+
+    for turn in range(199):
+        scores[0] += pointsArray[history[0,turn]][history[1,turn]]
+        scores[1] += pointsArray[history[1,turn]][history[0,turn]]
+
+    for turn in range(199,DETERMINISTIC_TURNS):
+        scores[0] += pointsArray[history[0,turn]][history[1,turn]]
+        scores[1] += pointsArray[history[1,turn]][history[0,turn]]
+
+        totals[0] += scores[0]/(turn+1)*turnChances[turn-199]
+        totals[1] += scores[1]/(turn+1)*turnChances[turn-199]
+
+    return totals, history
+
 def tallyRoundScores(history):
     scoreA = 0
     scoreB = 0
@@ -132,51 +200,25 @@ def runRounds(pair):
     moduleA = importlib.import_module(pair[0][0])
     moduleB = importlib.import_module(pair[1][0])
 
+    deterministic = runDeterministic(moduleA, moduleB)
+
     allScoresA = []
     allScoresB = []
     firstRoundHistory = None
-    for i in range(NUM_RUNS):
-        roundHistory = runRound(moduleA, moduleB)
-        scoresA, scoresB = tallyRoundScores(roundHistory)
-        if i == 0:
-            # log the first round's history
-            firstRoundHistory = roundHistory.tolist()
-            # check if the game was one of a few basic cases for early escape
-            if scoresA == 3 and scoresB == 3:
-                return [
-                    [pair[0][0],pair[1][0],pair[0][1],pair[1][1]],
-                    [3, 3, 0, 0, firstRoundHistory],
-                    [3, 3, 0, 0, firstRoundHistory],
-                ]
-            if scoresA == 0:
-                return [
-                    [pair[0][0],pair[1][0],pair[0][1],pair[1][1]],
-                    [0, 5, 0, 0, firstRoundHistory],
-                    [5, 0, 0, 0, firstRoundHistory],
-                ]
-            if scoresB == 0:
-                return [
-                    [pair[0][0],pair[1][0],pair[0][1],pair[1][1]],
-                    [5, 0, 0, 0, firstRoundHistory],
-                    [0, 5, 0, 0, firstRoundHistory],
-                ]
+    if deterministic:
+        allScoresA = [deterministic[0][0]]
+        allScoresB = [deterministic[0][1]]
+        firstRoundHistory = deterministic[1].tolist()
+    else:
+        for i in range(NUM_RUNS):
+            roundHistory = runRound(moduleA, moduleB)
+            scoresA, scoresB = tallyRoundScores(roundHistory)
+            if i == 0:
+                # log the first round's history
+                firstRoundHistory = roundHistory.tolist()
 
-        allScoresA.append(scoresA)
-        allScoresB.append(scoresB)
-
-        if i == MIN_ROUNDS and MIN_ROUNDS > 0:
-            # check if the scores are statistically reliable
-            if statistics.stdev(allScoresA) < MIN_SD or statistics.stdev(allScoresB) < MIN_SD:
-                avgScoreA = statistics.mean(allScoresA)
-                avgScoreB = statistics.mean(allScoresB)
-                stdevA = statistics.stdev(allScoresA) if len(allScoresA) > 1 else 0
-                stdevB = statistics.stdev(allScoresB) if len(allScoresB) > 1 else 0
-
-                return [
-                    [pair[0][0],pair[1][0],pair[0][1],pair[1][1]],
-                    [avgScoreA, avgScoreB, stdevA, stdevB, firstRoundHistory],
-                    [avgScoreB, avgScoreA, stdevB, stdevA, firstRoundHistory],
-                ]
+            allScoresA.append(scoresA)
+            allScoresB.append(scoresB)
 
     avgScoreA = statistics.mean(allScoresA)
     avgScoreB = statistics.mean(allScoresB)
