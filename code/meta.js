@@ -1,6 +1,6 @@
 let weights = [];
 let TOP = Infinity;
-
+let METAFILE = 'meta.ini';
 
 for(let i=2;i<process.argv.length;i++){
   if(i==2){
@@ -9,7 +9,7 @@ for(let i=2;i<process.argv.length;i++){
       console.log(
 `Prints out standings from the meta settings defined in meta.ini
 
-usage: node meta.js -top=[top] [[name]=[weight] ...]
+usage: node meta.js -top=[top] -meta=[metafile.ini] [[name]=[weight] ...]
 
 example: node meta.js titForTat=100 exampleStrats.simpleton=50
 `);
@@ -24,11 +24,22 @@ example: node meta.js titForTat=100 exampleStrats.simpleton=50
     TOP = parseInt(process.argv[i].replace('--top=','').replace('-top=','').replace('-t=',''));
     continue;
   }
+  if(
+    process.argv[i].indexOf('-m=')==0 ||
+    process.argv[i].indexOf('-meta=')==0 ||
+    process.argv[i].indexOf('--meta=')==0
+  ){
+    METAFILE = process.argv[i].replace('--meta=','').replace('-meta=','').replace('-m=','');
+    if(METAFILE.indexOf('.ini') < 0){
+      METAFILE += '.ini';
+    }
+    continue;
+  }
   weights.push(process.argv[i]);
 }
 
 const fs = require("fs");
-let meta = fs.readFileSync('meta.ini', 'utf8');
+let meta = fs.readFileSync(METAFILE, 'utf8');
 
 meta = meta.split('\n').concat(weights);
 
@@ -117,55 +128,4 @@ function print(data, meta){
   `${(a[1].stdev/a[1].games+0.0005+'').slice(0,5).padEnd(5,' ')} | `+
   `${getWeight(a[0], meta)>=1000?(''+Math.round(getWeight(a[0], meta))).padStart(6):getWeight(a[0], meta)%1==0?(''+getWeight(a[0], meta)).padStart(6):(''+getWeight(a[0], meta)).slice(0,6).padEnd(6,0)} | `+
   `${a[0]}\n`).join(''));
-}
-
-function oldprint(data, meta){
-  let scores={};
-
-  for(let n1 in data){
-    if(!scores.hasOwnProperty(n1)){
-      scores[n1] = {
-        games:0,
-        stdev:0,
-        cum:0,
-      };
-    }
-    let newest = data[n1][Object.keys(data[n1]).reduce((a, b) => a > b ? a : b)];
-    for(let n2 in newest){
-      if(!scores.hasOwnProperty(n2)){
-        scores[n2] = {
-          games:0,
-          stdev:0,
-          cum:0,
-        };
-      }
-      let round = newest[n2][Object.keys(newest[n2]).reduce((a, b) => a > b ? a : b)];
-
-      let weight1 = getWeight(n1,meta);
-      let weight2 = getWeight(n2,meta);
-
-      if(n1 == n2){
-        weight1-=1;
-        weight2-=1;
-      }
-
-      scores[n1].games+=weight2;
-      scores[n2].games+=weight1;
-      scores[n1].cum+=round[0]*weight2;
-      scores[n2].cum+=round[1]*weight1;
-      scores[n1].stdev+=round[2]*weight2;
-      scores[n2].stdev+=round[3]*weight1;
-    }
-  }
-
-  let winners = [];
-  for(let n in scores){
-    winners.push([n,scores[n]]);
-  }
-
-  winners.sort((a,b)=>b[1].cum/b[1].games-a[1].cum/a[1].games);
-
-  console.log("  # |  avg  | stdev | weight | name");
-  console.log("----+-------+-------+--------+------");
-  console.log(winners.map((a,b)=>`${(b+1+'').padStart(3)} | ${(a[1].cum/a[1].games+0.0005+'').slice(0,5).padEnd(5,' ')} | ${(a[1].stdev/a[1].games+0.0005+'').slice(0,5).padEnd(5,' ')} | ${(getWeight(a[0], meta)+'').padStart(6)} | ${a[0]}\n`).join(''));
 }

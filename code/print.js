@@ -1,3 +1,5 @@
+let METAFILE = 'meta.ini';
+
 let names = [];
 
 if(process.argv.length < 3){
@@ -12,19 +14,56 @@ for(let i=2;i<process.argv.length;i++){
 `Prints out matches that involve any files
 who's path includes any of the provided names
 
-usage: node print.js [[name] ...]
+usage: node print.js -meta=[metafile.ini] [[name] ...]
 
 example: node print.js titForTat exampleStrats.simpleton
 `);
       process.exit();
     }
   }
+  if(
+    process.argv[i].indexOf('-m=')==0 ||
+    process.argv[i].indexOf('-meta=')==0 ||
+    process.argv[i].indexOf('--meta=')==0
+  ){
+    METAFILE = process.argv[i].replace('--meta=','').replace('-meta=','').replace('-m=','');
+    if(METAFILE.indexOf('.ini') < 0){
+      METAFILE += '.ini';
+    }
+    continue;
+  }
   names.push(process.argv[i]);
 }
+
+const fs = require("fs");
+let meta = fs.readFileSync(METAFILE, 'utf8');
+
+meta = meta.split('\n');
+
+meta = meta.map((a)=>{
+  v = a.replace(/;.+/,'');
+  if(v.indexOf('=')<0){
+    return;
+  }
+  v = v.replace(/ /g,'').split('=');
+  v[1] = parseFloat(v[1]);
+
+  if(isNaN(v[1])){
+    return;
+  }
+
+  return v;
+}).filter(a=>a!=null);
 
 const data = require("./cache.json");
 
 print(data);
+
+function getWeight(name, meta){
+  let ans = 1;
+  meta.forEach(a=>ans*=name.indexOf(a[0])>=0?a[1]:1);
+  return ans;
+}
 
 function print(data){
   let ans = [];
@@ -50,6 +89,21 @@ function print(data){
       }
       let round = newest[n2][Object.keys(newest[n2]).reduce((a, b) => a > b ? a : b)];
 
+      let weight1 = getWeight(n1,meta);
+      let weight2 = getWeight(n2,meta);
+
+      if(weight1<0){weight1=0;}
+      if(weight2<0){weight2=0;}
+
+      if(n1 == n2){
+        if(weight1 != 0){
+          weight1-=1;
+        }
+        if(weight2 != 0){
+          weight2-=1;
+        }
+      }
+
       scores[n1].games++;
       scores[n2].games++;
       scores[n1].cum+=round[0];
@@ -65,7 +119,7 @@ function print(data){
         if(n2.indexOf(a)>=0){has=0}
       })
 
-      if(has >= 0){
+      if(has >= 0 && (has == 1 ? weight2 != 0 : weight1 != 0)){
         let txt=[has ?
           `${n1} (${round[0]} +/- ${round[2]}) VS ${n2} (${round[1]} +/- ${round[3]})\n` :
           `${n2} (${round[1]} +/- ${round[3]}) VS ${n1} (${round[0]} +/- ${round[2]})\n`

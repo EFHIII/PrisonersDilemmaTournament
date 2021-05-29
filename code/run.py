@@ -7,7 +7,7 @@ CACHE_FILE = "cache.json"
 MIN_ROUNDS = 11
 
 # Minimum Standard Deviation to keep calculating after MIN_ROUNDS
-MIN_SD = 0.02
+MIN_SD = 0.002
 
 import multiprocessing
 import itertools

@@ -3,6 +3,7 @@ let STEPS = 3;
 let COLOR = false;
 let FOCUS = "";
 let COLORTEXT = '\x1b[42m';
+let METAFILE = 'meta.ini';
 
 for(let i=2;i<process.argv.length;i++){
   if(i==2){
@@ -11,7 +12,7 @@ for(let i=2;i<process.argv.length;i++){
       console.log(
 `Prints out a grid of the position of the focused strategy for the provided meta ranges
 
-usage: node metagrid.js -focus=[name] -color -steps=[steps] [[name]=[weightStart]-[weightEnd] ...]
+usage: node metagrid.js -meta=[metafile.ini] -focus=[name] -color -steps=[steps] [[name]=[weightStart]-[weightEnd] ...]
 
 example: node metagrid.js -f=exampleStrats.titForTat -c random=0-10 titForTat=0-100
 `);
@@ -42,11 +43,22 @@ example: node metagrid.js -f=exampleStrats.titForTat -c random=0-10 titForTat=0-
     COLOR = true;
     continue;
   }
+  if(
+    process.argv[i].indexOf('-m=')==0 ||
+    process.argv[i].indexOf('-meta=')==0 ||
+    process.argv[i].indexOf('--meta=')==0
+  ){
+    METAFILE = process.argv[i].replace('--meta=','').replace('-meta=','').replace('-m=','');
+    if(METAFILE.indexOf('.ini') < 0){
+      METAFILE += '.ini';
+    }
+    continue;
+  }
   weights.push(process.argv[i]);
 }
 
 const fs = require("fs");
-let meta = fs.readFileSync('meta.ini', 'utf8');
+let meta = fs.readFileSync(METAFILE, 'utf8');
 
 meta = meta.split('\n');
 
@@ -270,7 +282,7 @@ function printNDPositions(a,min,max,depth=1){
     min = cp.reduce((a,b)=>Math.min(a,b));
     max = cp.reduce((a,b)=>Math.max(a,b));
 
-    console.log(`${min+1} - ${max+1}`);
+    //console.log(`${min+1} - ${max+1}`);
 
     [min,max] = [min+(max-min)/5,min+(max-min)/2];
   }
